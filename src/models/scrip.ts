@@ -13,7 +13,7 @@ export interface Scrip {
   type: string[];
   timeSpan: CalendarDate[];
   streak: StreakEntry[];
-  created_at?: CalendarDate;
+  createdAt: CalendarDate;
 }
 
 // Type for the raw database row
@@ -31,7 +31,7 @@ export const scripSerializer = {
   /**
    * Converts a Scrip object to a format suitable for database storage
    */
-  toRow(scrip: Scrip): Omit<ScripRow, 'id' | 'created_at'> {
+  toRow(scrip: Scrip): Omit<ScripRow, 'id'> {
     return {
       name: scrip.name,
       description: scrip.description,
@@ -40,7 +40,8 @@ export const scripSerializer = {
       streak: JSON.stringify(scrip.streak.map(entry => ({
         ...entry,
         date: entry.date.toString()
-      })))
+      }))),
+      created_at: scrip.createdAt.toString()
     };
   },
 
@@ -79,7 +80,7 @@ export const scripSerializer = {
       type: JSON.parse(row.type || '[]'),
       timeSpan: timeSpanDates,
       streak: streakEntries,
-      created_at: row.created_at ? parseDate(row.created_at.split(' ')[0]) : undefined
+      createdAt: parseDate(row.created_at)
     };
   }
 };
@@ -90,13 +91,15 @@ export function createScrip(
   description: string,
   type: string[] = [],
   startDate: CalendarDate,
-  endDate: CalendarDate
+  endDate: CalendarDate,
+  createdAt: CalendarDate
 ): Scrip {
   return {
     name,
     description,
     type,
     timeSpan: [startDate, endDate],
-    streak: []
+    streak: [],
+    createdAt
   };
 }
