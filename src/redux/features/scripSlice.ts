@@ -1,7 +1,9 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
-import { Scrip, scripSerializer } from '../../models/scrip'
+import { Scrip, scripSerializer, ScripRow } from '../../models/scrip'
 import Database from '@tauri-apps/plugin-sql'
+import { save, open } from '@tauri-apps/plugin-dialog'
+import { writeTextFile, readTextFile } from '@tauri-apps/plugin-fs'
 
 // Async thunks
 export const initializeDatabase = createAsyncThunk(
@@ -83,6 +85,75 @@ export const deleteScripInDb = createAsyncThunk(
   }
 )
 
+export const exportDatabaseToFile = createAsyncThunk(
+  'scrip/exportDatabaseToFile',
+  async () => {
+    // Fetch all data from database
+    const db = await Database.load('sqlite:main.db')
+    const result = await db.select<any[]>('SELECT * FROM scrips ORDER BY id DESC')
+    
+    // Let user select where to save the file
+    const filePath = await save({
+      filters: [{
+        name: 'JSON',
+        extensions: ['json']
+      }],
+      defaultPath: 'streak_data_export.json'
+    })
+    
+    if (filePath) {
+      // Write the raw data to the selected file
+      await writeTextFile(filePath, JSON.stringify(result, null, 2))
+    }
+    
+    return result.map(row => scripSerializer.fromRow(row)) // Return current scrips state
+  }
+)
+
+export const importDatabaseFromFile = createAsyncThunk(
+  'scrip/importDatabaseFromFile',
+  async () => {
+    // Let user select the file to import
+    const filePath = await open({
+      filters: [{
+        name: 'JSON',
+        extensions: ['json']
+      }]
+    })
+
+    if (!filePath) return [];
+
+    // Read the JSON file
+    const fileContent = await readTextFile(filePath as string);
+    const importedData = JSON.parse(fileContent) as ScripRow[];
+
+    // Connect to database
+    const db = await Database.load('sqlite:main.db')
+
+    // Clear existing data
+    await db.execute('DELETE FROM scrips')
+
+    // Insert all imported data
+    for (const row of importedData) {
+      await db.execute(
+        'INSERT INTO scrips (id, name, description, type, time_span, streak, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+        [
+          row.id,
+          row.name,
+          row.description,
+          row.type,
+          row.time_span,
+          row.streak,
+          row.created_at
+        ]
+      )
+    }
+
+    // Return the newly imported data as Scrip objects
+    return importedData.map(row => scripSerializer.fromRow(row))
+  }
+)
+
 // Define the TS type for the scrip slice's state
 export interface ScripState {
   scrips: Scrip[]
@@ -153,6 +224,30 @@ export const scripSlice = createSlice({
         state.scrips = action.payload
       })
       .addCase(deleteScripInDb.rejected, (state, action) => {
+        state.status = 'failed'
+        state.error = action.error.message || null
+      })
+      // Export Database
+      .addCase(exportDatabaseToFile.pending, (state) => {
+        state.status = 'loading'
+      })
+      .addCase(exportDatabaseToFile.fulfilled, (state) => {
+        state.status = 'idle'
+        state.error = null
+      })
+      .addCase(exportDatabaseToFile.rejected, (state, action) => {
+        state.status = 'failed'
+        state.error = action.error.message || null
+      })
+      // Import Database
+      .addCase(importDatabaseFromFile.pending, (state) => {
+        state.status = 'loading'
+      })
+      .addCase(importDatabaseFromFile.fulfilled, (state, action) => {
+        state.status = 'idle'
+        state.scrips = action.payload
+      })
+      .addCase(importDatabaseFromFile.rejected, (state, action) => {
         state.status = 'failed'
         state.error = action.error.message || null
       })

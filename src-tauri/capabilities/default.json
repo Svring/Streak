@@ -11,6 +11,10 @@
     "sql:default",
     "sql:allow-execute",
     "core:window:default",
-    "core:window:allow-start-dragging"
+    "core:window:allow-start-dragging",
+    "dialog:default",
+    "fs:default",
+    "fs:allow-download-write-recursive",
+    "fs:allow-download-read-recursive"
   ]
 }

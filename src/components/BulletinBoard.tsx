@@ -10,7 +10,7 @@ import { CalendarDate, today, getLocalTimeZone } from "@internationalized/date";
 import { FrameContext } from "../contexts/FrameContext";
 import { motion } from "motion/react";
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
-import { createScripInDb, selectAllScrips, setSelectedScrip } from '../redux/features/scripSlice';
+import { createScripInDb, exportDatabaseToFile, importDatabaseFromFile, selectAllScrips, setSelectedScrip } from '../redux/features/scripSlice';
 
 interface CreateScripModalProps {
   isOpen: boolean;
@@ -142,6 +142,22 @@ export default function BulletinBoard() {
           onPress={() => setModalOpen(true)}
         >
           +
+        </Button>
+
+        <Button
+          radius="full"
+          className="fixed bottom-4 left-4 bg-gradient-to-tr from-pink-500 to-yellow-500 text-white shadow-lg"
+          onPress={() => dispatch(exportDatabaseToFile())}
+        >
+          Export
+        </Button>
+
+        <Button
+          radius="full"
+          className="fixed bottom-4 left-28 bg-gradient-to-tr from-pink-500 to-yellow-500 text-white shadow-lg"
+          onPress={() => dispatch(importDatabaseFromFile())}
+        >
+          Import
         </Button>
 
         <CreateScripModal
