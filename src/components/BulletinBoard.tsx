@@ -5,12 +5,18 @@ import { createScrip } from "../models/scrip";
 import {
   DateRangePicker, Modal as NextModal, ModalContent,
   ModalHeader, ModalBody, ModalFooter, Button, Input,
+  Select, SelectItem
 } from "@nextui-org/react";
+import type {Selection} from "@nextui-org/react";
 import { CalendarDate, today, getLocalTimeZone } from "@internationalized/date";
 import { FrameContext } from "../contexts/FrameContext";
 import { motion } from "motion/react";
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
-import { createScripInDb, exportDatabaseToFile, importDatabaseFromFile, selectAllScrips, setSelectedScrip } from '../redux/features/scripSlice';
+import {
+  createScripInDb, exportDatabaseToFile, importDatabaseFromFile,
+  selectAllScrips, setSelectedScrip
+} from '../redux/features/scripSlice';
+import { PlusIcon, GearIcon } from "@radix-ui/react-icons";
 
 interface CreateScripModalProps {
   isOpen: boolean;
@@ -21,15 +27,16 @@ interface CreateScripModalProps {
 function CreateScripModal({ isOpen, onOpenChange, onSubmit }: CreateScripModalProps) {
   const [newScripData, setNewScripData] = useState({
     name: "",
-    description: "",
-    type: "",
+    description: ""
   });
+  const [selectedType, setSelectedType] = useState<Selection>(new Set([]));
   const [timeSpan, setTimeSpan] = useState<{ start: CalendarDate; end: CalendarDate } | null>(null);
 
   const handleSubmit = () => {
     if (!timeSpan) return;
-    onSubmit({ ...newScripData, timeSpan, createdAt: today(getLocalTimeZone()) });
-    setNewScripData({ name: "", description: "", type: "" });
+    onSubmit({ ...newScripData, type: Array.from(selectedType)[0].toString(), timeSpan, createdAt: today(getLocalTimeZone()) });
+    setNewScripData({ name: "", description: "" });
+    setSelectedType(new Set([]));
     setTimeSpan(null);
   };
 
@@ -42,54 +49,106 @@ function CreateScripModal({ isOpen, onOpenChange, onSubmit }: CreateScripModalPr
     >
       <ModalContent>
         <ModalHeader>
-          <Text size="6" color="iris" weight="bold">New Scrip</Text>
+          <Text size="6" className="text-accentGold" weight="bold">New Scrip</Text>
         </ModalHeader>
         <ModalBody>
-          <div className="flex flex-col gap-3 dark">
+          <div className="flex flex-col gap-2 dark">
             <Input
               label="Name"
               value={newScripData.name}
-              variant="bordered"
+              variant="underlined"
               classNames={{
                 input: "text-white",
-                label: "text-white"
+                label: "text-accentGold",
+                description: "text-accentGold"
               }}
               onChange={(e) => setNewScripData({ ...newScripData, name: e.target.value })}
             />
+
             <Input
               label="Description"
               value={newScripData.description}
-              variant="bordered"
+              variant="underlined"
               classNames={{
                 input: "text-white",
-                label: "text-white"
+                label: "text-accentGold"
               }}
               onChange={(e) => setNewScripData({ ...newScripData, description: e.target.value })}
             />
-            <Input
+
+            <Select
               label="Type"
-              value={newScripData.type}
-              variant="bordered"
+              variant="underlined"
               classNames={{
-                input: "text-white",
-                label: "text-white"
+                label: "text-accentGold"
               }}
-              onChange={(e) => setNewScripData({ ...newScripData, type: e.target.value })}
-            />
+              selectedKeys={selectedType}
+              onSelectionChange={setSelectedType}
+            >
+              <SelectItem key="hello" value="type1">Type 1</SelectItem>
+              <SelectItem key="type2" value="type2">Type 2</SelectItem>
+            </Select>
+
             <DateRangePicker
               label="Time Span"
               value={timeSpan}
+              variant="underlined"
+              classNames={{
+                label: "text-accentGold",
+              }}
               onChange={(value) => value && setTimeSpan(value)}
             />
           </div>
         </ModalBody>
         <ModalFooter>
-          <Button color="danger" variant="light" onPress={() => onOpenChange(false)}>
-            Cancel
+          <Button className="bg-accentGold text-accentDark" onPress={handleSubmit}>
+            Create
           </Button>
-          <Button color="primary" onPress={handleSubmit}>
-            Create Scrip
-          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </NextModal>
+  );
+}
+
+interface SettingsModalProps {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+function SettingsModal({ isOpen, onOpenChange }: SettingsModalProps) {
+  const dispatch = useAppDispatch();
+
+  return (
+    <NextModal
+      isOpen={isOpen}
+      onOpenChange={onOpenChange}
+      placement="center"
+      className="dark"
+    >
+      <ModalContent>
+        <ModalHeader>
+          <Text size="6" className="text-accentGold" weight="bold">Settings</Text>
+        </ModalHeader>
+        <ModalBody>
+          <div className="flex flex-col gap-4">
+            <Button
+              color="primary"
+              className="w-full bg-accentGold text-accentDark"
+              onPress={() => dispatch(exportDatabaseToFile())}
+            >
+              Export Database
+            </Button>
+            <Button
+              color="primary"
+              className="w-full bg-accentGold text-accentDark"
+              onPress={() => dispatch(importDatabaseFromFile())}
+            >
+              Import Database
+            </Button>
+          </div>
+        </ModalBody>
+        <ModalFooter>
+          
         </ModalFooter>
       </ModalContent>
     </NextModal>
@@ -101,6 +160,7 @@ export default function BulletinBoard() {
   const scrips = useAppSelector(selectAllScrips);
   const selectedScripId = useAppSelector(state => state.scrip.selectedScripId);
   const [modalOpen, setModalOpen] = useState(false);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const frameRef = useRef<HTMLDivElement>(null);
 
   const handleCreateScrip = async (data: { name: string; description: string; type: string; timeSpan: { start: CalendarDate; end: CalendarDate; } }) => {
@@ -122,7 +182,7 @@ export default function BulletinBoard() {
       <FrameContext.Provider value={{ frameRef }}>
         <motion.div
           ref={frameRef}
-          className="flex flex-row gap-4 w-full h-full bg-stone-900 rounded-lg p-2"
+          className="flex flex-row gap-4 w-full h-full bg-backdrop1 rounded-lg p-2"
           data-tauri-drag-region
         >
           {scrips.map((scrip) => (
@@ -138,32 +198,32 @@ export default function BulletinBoard() {
         <Button
           isIconOnly
           radius="full"
-          className="fixed bottom-4 right-4 bg-gradient-to-tr from-pink-500 to-yellow-500 text-white shadow-lg"
+          className="fixed bottom-4 right-4 bg-accentGold"
+          size="md"
           onPress={() => setModalOpen(true)}
         >
-          +
+          <PlusIcon className="w-4 h-4 text-accentDark" />
         </Button>
 
         <Button
+          isIconOnly
           radius="full"
-          className="fixed bottom-4 left-4 bg-gradient-to-tr from-pink-500 to-yellow-500 text-white shadow-lg"
-          onPress={() => dispatch(exportDatabaseToFile())}
+          className="fixed bottom-4 left-4 bg-accentGold"
+          size="md"
+          onPress={() => setSettingsModalOpen(true)}
         >
-          Export
-        </Button>
-
-        <Button
-          radius="full"
-          className="fixed bottom-4 left-28 bg-gradient-to-tr from-pink-500 to-yellow-500 text-white shadow-lg"
-          onPress={() => dispatch(importDatabaseFromFile())}
-        >
-          Import
+          <GearIcon className="w-4 h-4 text-accentDark" />
         </Button>
 
         <CreateScripModal
           isOpen={modalOpen}
           onOpenChange={setModalOpen}
           onSubmit={handleCreateScrip}
+        />
+
+        <SettingsModal
+          isOpen={settingsModalOpen}
+          onOpenChange={setSettingsModalOpen}
         />
 
       </FrameContext.Provider>

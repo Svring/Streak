@@ -8,7 +8,27 @@ export default {
     "./node_modules/@nextui-org/theme/dist/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        backdrop0: "#000000",
+        backdrop1: "#1c1917",
+        backdrop2: "#282524",
+        backdrop3: "#363231",
+        fontColorWhite: "#ffffff",
+        fontColorGray: "#a09c99",
+        accentGold: "#f1e398",
+        accentBlue: "#c2dce4",
+        accentGray: "#212427",
+        accentDark: "#191c1f",
+        accentScarlet: "#df3562",
+        accentGreen: "#a6e8c2"
+      },
+      fontFamily: {
+        sans: ["proxima-nova", "sans-serif"],
+        serif: ["Athelas", "serif"],
+        baskervville: ["Baskervville", "serif"],
+      },
+    },
   },
   darkMode: "class",
   plugins: [nextui()],

@@ -34,7 +34,7 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
-    <div className="w-screen h-screen p-1.5 bg-black rounded-lg">
+    <div className="w-screen h-screen p-1.5 bg-backdrop0 rounded-lg">
       <AppInitializer>
         <BulletinBoard />
       </AppInitializer>
