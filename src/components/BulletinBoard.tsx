@@ -3,12 +3,12 @@ import Scrip from "./Scrip";
 import { useState, useRef } from "react";
 import { createScrip } from "../models/scrip";
 import {
-  DateRangePicker, Modal as NextModal, ModalContent,
+  Modal as NextModal, ModalContent,
   ModalHeader, ModalBody, ModalFooter, Button, Input,
   Select, SelectItem
 } from "@nextui-org/react";
+import { DatePickerInput } from "@mantine/dates";
 import type {Selection} from "@nextui-org/react";
-import { CalendarDate, today, getLocalTimeZone } from "@internationalized/date";
 import { FrameContext } from "../contexts/FrameContext";
 import { motion } from "motion/react";
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
@@ -21,7 +21,7 @@ import { PlusIcon, GearIcon } from "@radix-ui/react-icons";
 interface CreateScripModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: { name: string; description: string; type: string; timeSpan: { start: CalendarDate; end: CalendarDate; }, createdAt: CalendarDate }) => void;
+  onSubmit: (data: { name: string; description: string; type: string; timeSpan: { start: Date; end: Date; }, createdAt: Date }) => void;
 }
 
 function CreateScripModal({ isOpen, onOpenChange, onSubmit }: CreateScripModalProps) {
@@ -30,14 +30,19 @@ function CreateScripModal({ isOpen, onOpenChange, onSubmit }: CreateScripModalPr
     description: ""
   });
   const [selectedType, setSelectedType] = useState<Selection>(new Set([]));
-  const [timeSpan, setTimeSpan] = useState<{ start: CalendarDate; end: CalendarDate } | null>(null);
+  const [timeSpan, setTimeSpan] = useState<[Date | null, Date | null]>([null, null]);
 
   const handleSubmit = () => {
-    if (!timeSpan) return;
-    onSubmit({ ...newScripData, type: Array.from(selectedType)[0].toString(), timeSpan, createdAt: today(getLocalTimeZone()) });
+    if (!timeSpan[0] || !timeSpan[1]) return;
+    onSubmit({
+      ...newScripData,
+      type: Array.from(selectedType)[0].toString(),
+      timeSpan: { start: timeSpan[0], end: timeSpan[1] },
+      createdAt: new Date()
+    });
     setNewScripData({ name: "", description: "" });
     setSelectedType(new Set([]));
-    setTimeSpan(null);
+    setTimeSpan([null, null]);
   };
 
   return (
@@ -89,14 +94,14 @@ function CreateScripModal({ isOpen, onOpenChange, onSubmit }: CreateScripModalPr
               <SelectItem key="type2" value="type2">Type 2</SelectItem>
             </Select>
 
-            <DateRangePicker
+            <DatePickerInput
+              type="range"
               label="Time Span"
               value={timeSpan}
-              variant="underlined"
+              onChange={setTimeSpan}
               classNames={{
                 label: "text-accentGold",
               }}
-              onChange={(value) => value && setTimeSpan(value)}
             />
           </div>
         </ModalBody>
@@ -163,14 +168,14 @@ export default function BulletinBoard() {
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const frameRef = useRef<HTMLDivElement>(null);
 
-  const handleCreateScrip = async (data: { name: string; description: string; type: string; timeSpan: { start: CalendarDate; end: CalendarDate; } }) => {
+  const handleCreateScrip = async (data: { name: string; description: string; type: string; timeSpan: { start: Date; end: Date; } }) => {
     const newScrip = createScrip(
       data.name || "New Scrip",
       data.description || "Description",
       [data.type],
       data.timeSpan.start,
       data.timeSpan.end,
-      today(getLocalTimeZone())
+      new Date()
     );
 
     await dispatch(createScripInDb(newScrip));

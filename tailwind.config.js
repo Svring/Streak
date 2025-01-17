@@ -18,7 +18,7 @@ export default {
         fontColorGray: "#a09c99",
         accentGold: "#f1e398",
         accentBlue: "#c2dce4",
-        accentGray: "#212427",
+        accentGray: "#9e9996",
         accentDark: "#191c1f",
         accentScarlet: "#df3562",
         accentGreen: "#a6e8c2"
@@ -27,6 +27,7 @@ export default {
         sans: ["proxima-nova", "sans-serif"],
         serif: ["Athelas", "serif"],
         baskervville: ["Baskervville", "serif"],
+        spectral: ["Spectral", "serif"],
       },
     },
   },

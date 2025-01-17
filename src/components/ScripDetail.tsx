@@ -8,7 +8,6 @@ import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { selectScripById, updateScripInDb } from "../redux/features/scripSlice";
 import { DatePicker, DatePickerInput } from "@mantine/dates";
 import { TextInput, Indicator } from '@mantine/core';
-import { dateToCalendarDate, calendarDateToDate } from "../utility/dateFormatter";
 import { motion, AnimatePresence } from "motion/react";
 
 interface ScripDetailProps {
@@ -29,35 +28,35 @@ export default function ScripDetail({ id, isOpen, onClose }: ScripDetailProps) {
   const [description, setDescription] = useState(scrip.description);
   const [type, setType] = useState(scrip.type);
   const [timeSpan, setTimeSpan] = useState<[Date | null, Date | null]>([
-    scrip.timeSpan[0] ? calendarDateToDate(scrip.timeSpan[0]) : null,
-    scrip.timeSpan[1] ? calendarDateToDate(scrip.timeSpan[1]) : null
+    scrip.timeSpan[0] || null,
+    scrip.timeSpan[1] || null
   ]);
   const [streak, setStreak] = useState(scrip.streak);
   const [modifying, setModifying] = useState(false);
 
   useEffect(() => {
     if (selectedStreakEntry) {
-      const currentEntry = streak.find(entry => entry.date.toString() === selectedStreakEntry.date);
-      setSelectedStreakEntry(currentEntry ? { date: currentEntry.date.toString(), note: currentEntry.note || '' } : null);
+      const currentEntry = streak.find(entry => entry.date.toISOString() === selectedStreakEntry.date);
+      setSelectedStreakEntry(currentEntry ? { date: currentEntry.date.toISOString(), note: currentEntry.note || '' } : null);
     }
   }, [streak]);
 
   useEffect(() => {
     if (selectedDate) {
-      const selectedCalendarDate = dateToCalendarDate(selectedDate);
-      const existingEntry = streak.find(entry => entry.date.toString() === selectedCalendarDate.toString());
+      const selectedDateISO = selectedDate.toISOString();
+      const existingEntry = streak.find(entry => entry.date.toISOString() === selectedDateISO);
 
       if (existingEntry) {
-        if (selectedStreakEntry?.date === selectedCalendarDate.toString()) {
-          setStreak(streak.filter(entry => entry.date.toString() !== selectedCalendarDate.toString()));
+        if (selectedStreakEntry?.date === selectedDateISO) {
+          setStreak(streak.filter(entry => entry.date.toISOString() !== selectedDateISO));
           setSelectedStreakEntry(null);
         } else {
-          setSelectedStreakEntry({ date: selectedCalendarDate.toString(), note: existingEntry.note || '' });
+          setSelectedStreakEntry({ date: selectedDateISO, note: existingEntry.note || '' });
         }
       } else {
-        const newEntry = { date: selectedCalendarDate, completed: true, note: '' };
+        const newEntry = { date: selectedDate, note: '' };
         setStreak([...streak, newEntry]);
-        setSelectedStreakEntry({ date: selectedCalendarDate.toString(), note: '' });
+        setSelectedStreakEntry({ date: selectedDateISO, note: '' });
       }
       setSelectedDate(null);
     }
@@ -67,7 +66,7 @@ export default function ScripDetail({ id, isOpen, onClose }: ScripDetailProps) {
     if (!selectedStreakEntry) return;
 
     const updatedStreak = streak.map(entry =>
-      entry.date.toString() === selectedStreakEntry.date
+      entry.date.toISOString() === selectedStreakEntry.date
         ? { ...entry, note }
         : entry
     );
@@ -94,8 +93,8 @@ export default function ScripDetail({ id, isOpen, onClose }: ScripDetailProps) {
       description,
       type,
       timeSpan: [
-        dateToCalendarDate(timeSpan[0]!),
-        dateToCalendarDate(timeSpan[1]!)
+        timeSpan[0]!,
+        timeSpan[1]!
       ],
       streak
     };
@@ -156,7 +155,7 @@ export default function ScripDetail({ id, isOpen, onClose }: ScripDetailProps) {
                   <DatePickerInput type="range" clearable value={timeSpan} onChange={setTimeSpan} />
                 ) : (
                   <Text size="2" className="text-stone-400">
-                    {dateToCalendarDate(timeSpan[0]!).toString()} | {dateToCalendarDate(timeSpan[1]!).toString()}
+                    {timeSpan[0]?.toLocaleDateString()} | {timeSpan[1]?.toLocaleDateString()}
                   </Text>
                 )}
               </div>
@@ -170,8 +169,8 @@ export default function ScripDetail({ id, isOpen, onClose }: ScripDetailProps) {
                 onChange={setSelectedDate}
                 maxDate={new Date()}
                 renderDay={(date) => {
-                  const dateString = dateToCalendarDate(date).toString();
-                  const hasStreak = streak.some(entry => entry.date.toString() === dateString);
+                  const dateString = new Date(date).toISOString();
+                  const hasStreak = streak.some(entry => entry.date.toISOString() === dateString);
                   return (
                     <Indicator size={4} position="bottom-center" color="green" offset={-2} disabled={!hasStreak}>
                       <div>{date.getDate()}</div>

@@ -1,8 +1,5 @@
-import { CalendarDate, parseDate } from "@internationalized/date";
-
 export type StreakEntry = {
-  date: CalendarDate;
-  completed: boolean;
+  date: Date;
   note: string;
 };
 
@@ -11,9 +8,9 @@ export interface Scrip {
   name: string;
   description: string;
   type: string[];
-  timeSpan: CalendarDate[];
+  timeSpan: Date[];
   streak: StreakEntry[];
-  createdAt: CalendarDate;
+  createdAt: Date;
 }
 
 // Type for the raw database row
@@ -36,12 +33,12 @@ export const scripSerializer = {
       name: scrip.name,
       description: scrip.description,
       type: JSON.stringify(scrip.type),
-      time_span: JSON.stringify(scrip.timeSpan.map(date => date.toString())),
+      time_span: JSON.stringify(scrip.timeSpan.map(date => date.toISOString())),
       streak: JSON.stringify(scrip.streak.map(entry => ({
-        ...entry,
-        date: entry.date.toString()
+        date: entry.date.toISOString(),
+        note: entry.note
       }))),
-      created_at: scrip.createdAt.toString()
+      created_at: scrip.createdAt.toISOString()
     };
   },
 
@@ -49,12 +46,12 @@ export const scripSerializer = {
    * Converts a database row back to a Scrip object
    */
   fromRow(row: ScripRow): Scrip {
-    let timeSpanDates: CalendarDate[] = [];
+    let timeSpanDates: Date[] = [];
     try {
       const timeSpanStr = row.time_span || '[]';
       const parsedDates = JSON.parse(timeSpanStr);
       if (Array.isArray(parsedDates)) {
-        timeSpanDates = parsedDates.map(dateStr => parseDate(dateStr));
+        timeSpanDates = parsedDates.map(dateStr => new Date(dateStr));
       }
     } catch (error) {
       console.error('Error parsing timeSpan:', error);
@@ -66,7 +63,7 @@ export const scripSerializer = {
       const streakStr = row.streak || '[]';
       streakEntries = JSON.parse(streakStr).map((entry: any) => ({
         ...entry,
-        date: parseDate(entry.date)
+        date: new Date(entry.date)
       }));
     } catch (error) {
       console.error('Error parsing streak:', error);
@@ -80,7 +77,7 @@ export const scripSerializer = {
       type: JSON.parse(row.type || '[]'),
       timeSpan: timeSpanDates,
       streak: streakEntries,
-      createdAt: parseDate(row.created_at)
+      createdAt: new Date(row.created_at)
     };
   }
 };
@@ -90,9 +87,9 @@ export function createScrip(
   name: string,
   description: string,
   type: string[] = [],
-  startDate: CalendarDate,
-  endDate: CalendarDate,
-  createdAt: CalendarDate
+  startDate: Date,
+  endDate: Date,
+  createdAt: Date
 ): Scrip {
   return {
     name,
