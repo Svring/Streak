@@ -35,9 +35,11 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
 function App() {
   return (
     <div className="w-screen h-screen p-1.5 bg-backdrop0 rounded-lg">
-      <AppInitializer>
-        <BulletinBoard />
-      </AppInitializer>
+      <div className="w-full h-full bg-backdrop1 rounded-lg p-2">
+        <AppInitializer>
+          <BulletinBoard />
+        </AppInitializer>
+      </div>
     </div>
   )
 }

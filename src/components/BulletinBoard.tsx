@@ -2,7 +2,6 @@ import Scrip from "./Scrip";
 import { useState, useRef } from "react";
 import { Button } from "@nextui-org/react";
 import { FrameContext } from "../contexts/FrameContext";
-import { motion } from "motion/react";
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { selectAllScrips, setSelectedScrip } from '../redux/features/scripSlice';
 import { PlusIcon, GearIcon } from "@radix-ui/react-icons";
@@ -18,11 +17,11 @@ export default function BulletinBoard() {
   const frameRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div className="w-full h-full">
+    <div data-tauri-drag-region className="w-full h-full">
       <FrameContext.Provider value={{ frameRef }}>
-        <motion.div
+        <div
           ref={frameRef}
-          className="flex flex-row gap-4 w-full h-full bg-backdrop1 rounded-lg p-2"
+          className="flex flex-wrap gap-4 w-full bg-backdrop1 rounded-lg p-2"
           data-tauri-drag-region
         >
           {scrips.map((scrip) => (
@@ -33,7 +32,7 @@ export default function BulletinBoard() {
               onSelect={() => dispatch(setSelectedScrip(scrip.id ? (scrip.id === selectedScripId ? null : scrip.id) : null))}
             />
           ))}
-        </motion.div>
+        </div>
 
         <Button
           isIconOnly
