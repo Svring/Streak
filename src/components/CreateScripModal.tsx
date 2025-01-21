@@ -87,13 +87,14 @@ export function CreateScripModal({ isOpen, onOpenChange }: CreateScripModalProps
               label="Type"
               variant="underlined"
               classNames={{
-                label: "text-accentGold"
+                label: "text-accentGold",
+                listboxWrapper: "text-accentDark"
               }}
               selectedKeys={selectedType}
               onSelectionChange={setSelectedType}
             >
-              <SelectItem key="hello" value="type1">Type 1</SelectItem>
-              <SelectItem key="type2" value="type2">Type 2</SelectItem>
+              <SelectItem key="daily" value="daily">Daily</SelectItem>
+              <SelectItem key="project" value="project">Project</SelectItem>
             </Select>
 
             <DatePickerInput
@@ -101,8 +102,10 @@ export function CreateScripModal({ isOpen, onOpenChange }: CreateScripModalProps
               label="Time Span"
               value={timeSpan}
               onChange={setTimeSpan}
+              variant="unstyled"
               classNames={{
                 label: "text-accentGold",
+                wrapper: "ring-1 ring-inset ring-accentGold rounded-md"
               }}
             />
           </div>

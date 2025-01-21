@@ -2,7 +2,7 @@ import { motion } from "motion/react";
 import ScripDetail from "./ScripDetail";
 import { useFrame } from "../contexts/FrameContext";
 import { Heading, Text } from "@radix-ui/themes";
-import { Button } from "@nextui-org/react";
+import { Button, Chip } from "@nextui-org/react";
 import { useState, useMemo, useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { deleteScripInDb, selectScripById, updateScripInDb } from "../redux/features/scripSlice";
@@ -107,6 +107,19 @@ export default function Scrip({ id, isSelected, onSelect }: ScripProps) {
         <Text size="2" className="text-accentGray line-clamp-2">
           {scrip.description}
         </Text>
+
+        <Chip
+          key={scrip.type[0]}
+          size="sm"
+          variant="flat"
+          className={`absolute bottom-4 left-4 ${
+            scrip.type[0] === 'daily' 
+              ? 'bg-accentDark text-accentGreen ring-1 ring-accentGreen'
+              : 'bg-accentDark text-accentBlue ring-1 ring-accentBlue'
+          }`}>
+          {scrip.type[0][0].toUpperCase()}
+        </Chip>
+
         <Button
           size="sm"
           radius="full"

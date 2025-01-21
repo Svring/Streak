@@ -17,7 +17,7 @@ export default {
         fontColorWhite: "#ffffff",
         fontColorGray: "#a09c99",
         accentGold: "#f1e398",
-        accentBlue: "#c2dce4",
+        accentBlue: "#70adc0",
         accentGray: "#9e9996",
         accentDark: "#191c1f",
         accentScarlet: "#df3562",

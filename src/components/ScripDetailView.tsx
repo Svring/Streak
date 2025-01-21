@@ -4,7 +4,7 @@ import {
 import { DatePicker } from "@mantine/dates";
 import { Indicator } from '@mantine/core';
 import { motion, AnimatePresence } from "motion/react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { Scrip, StreakEntry } from "../models/scrip";
 import { useLongPress } from 'use-long-press';
 import { useAppDispatch } from "../redux/hooks";
@@ -24,6 +24,7 @@ export function ScripDetailView({ scrip }: ScripDetailViewProps) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedStreakEntry, setSelectedStreakEntry] = useState<StreakEntry | null>(null);
   const dispatch = useAppDispatch();
+  const unsavedChangesRef = useRef<StreakEntry | null>(null);
 
   const handleDateSelect = (date: Date | null) => {
     if (!date) return;
@@ -79,6 +80,63 @@ export function ScripDetailView({ scrip }: ScripDetailViewProps) {
     threshold: 1000,
     cancelOnMovement: true,
   });
+
+  // Save function to reuse across effects
+  const saveChanges = () => {
+    if (!unsavedChangesRef.current) return;
+
+    const updatedStreak = scrip.streak.map(entry =>
+      isSameDay(entry.date, unsavedChangesRef.current!.date)
+        ? unsavedChangesRef.current as StreakEntry // Ensure type safety
+        : entry
+    );
+
+    dispatch(updateScripInDb({
+      ...scrip,
+      streak: updatedStreak
+    }));
+    unsavedChangesRef.current = null;
+  };
+
+  // Normal debounced save effect
+  useEffect(() => {
+    if (!selectedStreakEntry) return;
+    unsavedChangesRef.current = selectedStreakEntry;
+
+    const timer = setTimeout(() => {
+      saveChanges();
+    }, 10000); // Reduced from 100000 to more reasonable 500ms
+
+    return () => clearTimeout(timer);
+  }, [selectedStreakEntry, scrip]);
+
+  // Save changes when streak entry panel visibility changes
+  useEffect(() => {
+    // If panel is being hidden (selectedStreakEntry becomes null)
+    // and we have unsaved changes, save them
+    if (!selectedStreakEntry && unsavedChangesRef.current) {
+      saveChanges();
+    }
+  }, [selectedStreakEntry]);
+
+  // Cleanup effect for component unmount and app closure
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (unsavedChangesRef.current) {
+        saveChanges();
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    // Cleanup on component unmount
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      if (unsavedChangesRef.current) {
+        saveChanges();
+      }
+    };
+  }, [scrip]);
 
   const handleNoteChange = (note: string) => {
     if (!selectedStreakEntry) return;

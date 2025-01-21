@@ -1,11 +1,13 @@
 import { Text } from "@radix-ui/themes";
 import {
-  ModalHeader, ModalBody, Textarea
+  ModalHeader, ModalBody, Textarea,
+  Button
 } from "@nextui-org/react";
-import { DatePicker, DatePickerInput } from "@mantine/dates";
-import { TextInput, Indicator } from '@mantine/core';
+import { DatePickerInput } from "@mantine/dates";
+import { TextInput } from '@mantine/core';
 import { useState } from "react";
 import type { Scrip } from "../models/scrip";
+import { BookmarkIcon } from "@radix-ui/react-icons";
 
 interface ScripDetailEditProps {
   scrip: Scrip;
@@ -20,35 +22,14 @@ export function ScripDetailEdit({ scrip, onSave }: ScripDetailEditProps) {
     scrip.timeSpan[0],
     scrip.timeSpan[1]
   ]);
-  const [streak, setStreak] = useState(scrip.streak);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-
-  const isSameDay = (date1: Date, date2: Date) => {
-    return date1.getFullYear() === date2.getFullYear() &&
-      date1.getMonth() === date2.getMonth() &&
-      date1.getDate() === date2.getDate();
-  };
-
-  const handleDateSelect = (date: Date | null) => {
-    if (!date) return;
-    setSelectedDate(date);
-    
-    const existingEntry = streak.find(entry => isSameDay(entry.date, date));
-    if (existingEntry) {
-      setStreak(streak.filter(entry => !isSameDay(entry.date, date)));
-    } else {
-      setStreak([...streak, { date, note: '' }]);
-    }
-  };
-
+  
   const handleSave = () => {
     onSave({
       ...scrip,
       name,
       description,
       type,
-      timeSpan,
-      streak
+      timeSpan
     });
   };
 
@@ -56,7 +37,7 @@ export function ScripDetailEdit({ scrip, onSave }: ScripDetailEditProps) {
     <>
       <ModalHeader>
         <TextInput
-          variant="unstyled"
+          variant="underlined"
           className="text-stone-100"
           size="lg"
           value={name}
@@ -94,23 +75,13 @@ export function ScripDetailEdit({ scrip, onSave }: ScripDetailEditProps) {
             />
           </div>
 
-          <Text size="2" className="text-stone-100">
-            Streak ({streak.length} days)
-          </Text>
-
-          <DatePicker
-            value={selectedDate}
-            onChange={handleDateSelect}
-            maxDate={new Date()}
-            renderDay={(date) => {
-              const hasStreak = streak.some(entry => isSameDay(entry.date, date));
-              return (
-                <Indicator size={4} position="bottom-center" color="green" offset={-2} disabled={!hasStreak}>
-                  <div>{date.getDate()}</div>
-                </Indicator>
-              );
-            }}
-          />
+          <Button
+            isIconOnly radius="full" size="md"
+            className="absolute bottom-4 right-4 bg-accentGold text-accentDark shadow-lg"
+            onPress={handleSave}
+          >
+            <BookmarkIcon className="w-4 h-4" />
+          </Button>
         </div>
       </ModalBody>
     </>

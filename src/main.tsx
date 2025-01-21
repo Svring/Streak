@@ -16,15 +16,15 @@ import { MantineProvider } from '@mantine/core';
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <Theme appearance="dark">
-      <NextUIProvider>
         <ReduxProvider store={store}>
-          <MantineProvider defaultColorScheme="dark">
+        <MantineProvider defaultColorScheme="dark">
+          <NextUIProvider>
             <main className="dark text-foreground bg-background">
               <App />
             </main>
-          </MantineProvider>
-        </ReduxProvider>
-      </NextUIProvider>
+          </NextUIProvider>
+        </MantineProvider>
+      </ReduxProvider>
     </Theme>
   </React.StrictMode>,
 );
